@@ -11,7 +11,9 @@ import streamlit as st
 import cv2
 import os
 import tempfile
-from typing import Dict, Tuple, Optional
+import requests
+from io import BytesIO
+from typing import Dict, Tuple
 import logging
 from pathlib import Path
 
@@ -23,7 +25,7 @@ logger = logging.getLogger(__name__)
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 IMAGE_SIZE = (224, 224)
 CLASS_NAMES = ['cataract', 'Conjunctivitis', 'swelling', 'Normal', 'Uveitis']
-MODEL_PATH = r"C:\Users\rohit\Desktop\machine learning\Projects\final"
+MODEL_URL = "https://github.com/rohit9030/eye-disease-prediction/raw/main/model.pth"
 
 # Disease information for professional display
 DISEASE_INFO = {
@@ -95,32 +97,46 @@ class mod1(nn.Module):
         return x
 
 def create_model(input_size: int = 3, hidden_size: int = 15, output_size: int = 5):
-    """
-    Create the exact model architecture that was used for training.
-    This must match your original mod1 class exactly.
-    """
+    """Create the exact model architecture that was used for training."""
     return mod1(input_size, hidden_size, output_size)
 
+@st.cache_resource
+def load_model():
+    """Load model weights from GitHub URL with caching"""
+    try:
+        logger.info(f"Downloading model from {MODEL_URL}")
+        response = requests.get(MODEL_URL)
+        response.raise_for_status()
+        
+        # Load model weights directly from bytes
+        model = create_model()
+        model.load_state_dict(torch.load(BytesIO(response.content), map_location=DEVICE))
+        model.to(DEVICE)
+        model.eval()
+        logger.info("Model loaded successfully")
+        return model
+    except Exception as e:
+        logger.error(f"Failed to load model: {e}")
+        st.error(f"Model loading failed: {str(e)}")
+        st.stop()
+
 def preprocess_image(image_array):
-    """
-    Preprocess image using the exact same transforms as your original code.
-    Replicates the v2.Compose transform pipeline.
-    """
+    """Preprocess image using the exact same transforms as your original code."""
     try:
         # Convert BGR to RGB (OpenCV loads as BGR)
         if len(image_array.shape) == 3 and image_array.shape[2] == 3:
             image_array = cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB)
         
-        # Convert to PIL Image first (like v2.ToImage())
+        # Convert to PIL Image
         from PIL import Image
         if image_array.dtype != 'uint8':
             image_array = (image_array * 255).astype('uint8')
         pil_image = Image.fromarray(image_array)
         
-        # Apply the exact same transforms as your original
+        # Apply transforms
         transform = transforms.Compose([
-            transforms.Resize(size=(224, 224), antialias=True),
-            transforms.ToTensor(),  # This converts to [0,1] float32 and changes to CHW
+            transforms.Resize(size=(224, 224), 
+            transforms.ToTensor(),
         ])
         
         image_tensor = transform(pil_image)
@@ -130,23 +146,9 @@ def preprocess_image(image_array):
         logger.error(f"Error preprocessing image: {e}")
         raise
 
-def load_model_and_predict(image_path: str) -> Tuple[str, Dict[str, float]]:
-    """
-    Load the trained model and make prediction on the image.
-    """
+def predict_with_model(model, image_path: str) -> Tuple[str, Dict[str, float]]:
+    """Make prediction on the image using the loaded model."""
     try:
-        # Check if model file exists
-        if not os.path.exists(MODEL_PATH):
-            raise FileNotFoundError(f"Model file not found: {MODEL_PATH}")
-        
-        # Create model with exact same architecture
-        model = create_model(input_size=3, hidden_size=15, output_size=5)
-        
-        # Load the trained weights
-        model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE, weights_only=False))
-        model.to(DEVICE)
-        model.eval()
-        
         # Load and preprocess image
         image = cv2.imread(image_path)
         if image is None:
@@ -157,17 +159,14 @@ def load_model_and_predict(image_path: str) -> Tuple[str, Dict[str, float]]:
         # Make prediction
         with torch.no_grad():
             output = model(image_tensor)
-            
-            # Apply softmax to get probabilities
             probabilities = torch.softmax(output, dim=1)
             probabilities_percent = probabilities * 100
-            
             _, predicted = torch.max(probabilities, 1)
         
         # Get predicted class
         predicted_class = CLASS_NAMES[predicted.item()]
         
-        # Create a dictionary with class names and their probabilities
+        # Create probability dictionary
         prob_dict = {}
         probabilities_array = probabilities_percent.cpu().numpy().flatten()
         
@@ -371,6 +370,11 @@ def create_streamlit_app():
     st.markdown('<h1 class="main-header">Clinical Eye Disorder Classifier</h1>', 
                 unsafe_allow_html=True)
     
+    # Preload model when app starts
+    if 'model' not in st.session_state:
+        with st.spinner("Initializing diagnostic system..."):
+            st.session_state.model = load_model()
+    
     # Sidebar
     with st.sidebar:
         st.markdown('<p class="section-header">SYSTEM PARAMETERS</p>', unsafe_allow_html=True)
@@ -408,6 +412,7 @@ def create_streamlit_app():
         st.markdown(f"<div style='text-align: center; margin-top: 2rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px;'><strong>COMPUTE:</strong> {DEVICE.upper()}</div>", unsafe_allow_html=True)
         
         if st.button("SYSTEM RESET", type="primary"):
+            st.session_state.clear()
             st.rerun()
     
     # Main content
@@ -423,7 +428,7 @@ def create_streamlit_app():
         )
         
         if uploaded_file is not None:
-            # Display uploaded image with sophisticated styling
+            # Display uploaded image
             st.markdown('<div style="border: 1px solid #444; border-radius: 12px; padding: 1rem; background: rgba(255,255,255,0.02);">', unsafe_allow_html=True)
             st.image(uploaded_file, caption="ACQUIRED IMAGE", use_column_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
@@ -434,15 +439,15 @@ def create_streamlit_app():
                 temp_path = tmp_file.name
             
             try:
-                # Make prediction with sophisticated loading
+                # Make prediction
                 with st.spinner("PROCESSING NEURAL NETWORK INFERENCE..."):
-                    predicted_class, probabilities = load_model_and_predict(temp_path)
+                    predicted_class, probabilities = predict_with_model(st.session_state.model, temp_path)
                 
                 # Display results in the second column
                 with col2:
                     st.markdown('<p class="section-header">DIAGNOSTIC ANALYSIS</p>', unsafe_allow_html=True)
                     
-                    # Main prediction with sophisticated styling
+                    # Main prediction
                     confidence = probabilities[predicted_class]
                     st.markdown(f"""
                     <div class="prediction-box">
@@ -456,14 +461,14 @@ def create_streamlit_app():
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    # Sophisticated probability breakdown
+                    # Probability breakdown
                     st.markdown('<p class="section-header">PROBABILITY DISTRIBUTION</p>', unsafe_allow_html=True)
                     
-                    # Sort probabilities for better display
+                    # Sort probabilities
                     sorted_probs = sorted(probabilities.items(), key=lambda x: x[1], reverse=True)
                     
                     for i, (condition, prob) in enumerate(sorted_probs):
-                        # Sophisticated color coding
+                        # Color coding
                         if prob > 50:
                             confidence_class = "confidence-high"
                         elif prob > 20:
@@ -490,7 +495,7 @@ def create_streamlit_app():
                         </div>
                         """, unsafe_allow_html=True)
                     
-                    # Clinical information with sophisticated styling
+                    # Clinical information
                     if predicted_class in DISEASE_INFO:
                         st.markdown(f"""
                         <div class="info-box" style="margin-top: 2rem;">
