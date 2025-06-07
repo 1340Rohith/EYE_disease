@@ -111,7 +111,8 @@ def load_model():
         
         # Load model weights directly from bytes
         model = create_model()
-        model.load_state_dict(torch.load(BytesIO(response.content), map_location=DEVICE))
+        # >>> MODIFICATION HERE <<<
+        model.load_state_dict(torch.load(BytesIO(response.content), map_location=DEVICE, weights_only=False)) 
         model.to(DEVICE)
         model.eval()
         logger.info("Model loaded successfully")
