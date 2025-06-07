@@ -1,8 +1,30 @@
-streamlit
-torch --index-url https://download.pytorch.org/whl/cpu
-torchvision --index-url https://download.pytorch.org/whl/cpu
-opencv-python-headless
-Pillow
-numpy
-requests
-gdown
+# Core ML and Deep Learning (CPU versions for deployment)
+torch==2.1.0+cpu
+torchvision==0.16.0+cpu
+--find-links https://download.pytorch.org/whl/torch_stable.html
+
+# Web Framework
+streamlit==1.28.1
+
+# Computer Vision
+opencv-python-headless==4.8.1.78
+Pillow==10.0.1
+
+# Numerical Computing
+numpy==1.24.3
+
+# Utilities
+pathlib2==2.3.7
+
+# For remote model downloading
+requests==2.31.0
+gdown==4.7.1
+urllib3==2.0.7
+
+# Optional: For better performance (uncomment if needed)
+# streamlit-option-menu==0.3.6
+# streamlit-lottie==0.0.5
+
+# For deployment compatibility
+setuptools==68.0.0
+wheel==0.41.2
