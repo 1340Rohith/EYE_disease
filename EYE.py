@@ -22,11 +22,12 @@ from typing import Tuple, Dict
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Constants
+
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 IMAGE_SIZE = (224, 224)
 CLASS_NAMES = ['cataract', 'Conjunctivitis', 'swelling', 'Normal', 'Uveitis']
-MODEL_URL = "https://github.com/1340Rohith/EYE_disease/blob/main/final"
+MODEL_URL = "https://raw.githubusercontent.com/1340Rohith/EYE_disease/main/final" # Corrected URL
+
 
 # Disease information for professional display
 DISEASE_INFO = {
@@ -101,17 +102,19 @@ def create_model(input_size: int = 3, hidden_size: int = 15, output_size: int = 
     """Create the exact model architecture that was used for training."""
     return mod1(input_size, hidden_size, output_size)
 
+
 @st.cache_resource
 def load_model():
     """Load model weights from GitHub URL with caching"""
     try:
         logger.info(f"Downloading model from {MODEL_URL}")
         response = requests.get(MODEL_URL)
-        response.raise_for_status()
+        response.raise_for_status() # This will raise an HTTPError for bad responses (4xx or 5xx)
         
         # Load model weights directly from bytes
         model = create_model()
-        # >>> MODIFICATION HERE <<<
+        # Ensure weights_only=False if your PyTorch version is 2.6+ and the file
+        # contains more than just state_dict, as previously discussed.
         model.load_state_dict(torch.load(BytesIO(response.content), map_location=DEVICE, weights_only=False)) 
         model.to(DEVICE)
         model.eval()
