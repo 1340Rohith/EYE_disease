@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 IMAGE_SIZE = (224, 224)
 CLASS_NAMES = ['cataract', 'Conjunctivitis', 'swelling', 'Normal', 'Uveitis']
-MODEL_URL = "https://github.com/rohit9030/eye-disease-prediction/raw/main/model.pth"
+MODEL_URL = "https://github.com/1340Rohith/EYE_disease/blob/main/final"
 
 # Disease information for professional display
 DISEASE_INFO = {
