@@ -13,9 +13,9 @@ import os
 import tempfile
 import requests
 from io import BytesIO
-from typing import Dict, Tuple
 import logging
-from pathlib import Path
+import numpy as np
+from PIL import Image
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -120,41 +120,35 @@ def load_model():
         st.error(f"Model loading failed: {str(e)}")
         st.stop()
 
-def preprocess_image(image_array):
-    """Preprocess image using the exact same transforms as your original code."""
+def preprocess_image(image):
+    """Preprocess image for model input"""
     try:
-        # Convert BGR to RGB (OpenCV loads as BGR)
-        if len(image_array.shape) == 3 and image_array.shape[2] == 3:
-            image_array = cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB)
-        
-        # Convert to PIL Image
-        from PIL import Image
-        if image_array.dtype != 'uint8':
-            image_array = (image_array * 255).astype('uint8')
-        pil_image = Image.fromarray(image_array)
+        # Convert to RGB if needed
+        if isinstance(image, np.ndarray):
+            if len(image.shape) == 3 and image.shape[2] == 3:
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            image = Image.fromarray(image)
         
         # Apply transforms
         transform = transforms.Compose([
-            transforms.Resize(size=(224, 224), 
+            transforms.Resize(IMAGE_SIZE),
             transforms.ToTensor(),
         ])
         
-        image_tensor = transform(pil_image)
-        return image_tensor.unsqueeze(0)  # Add batch dimension
+        return transform(image).unsqueeze(0).to(DEVICE)  # Add batch dimension
         
     except Exception as e:
         logger.error(f"Error preprocessing image: {e}")
-        raise
+        st.error(f"Image processing error: {str(e)}")
+        return None
 
-def predict_with_model(model, image_path: str) -> Tuple[str, Dict[str, float]]:
+def predict_with_model(model, image) -> Tuple[str, Dict[str, float]]:
     """Make prediction on the image using the loaded model."""
     try:
-        # Load and preprocess image
-        image = cv2.imread(image_path)
-        if image is None:
-            raise ValueError("Could not load image")
-        
-        image_tensor = preprocess_image(image).to(DEVICE)
+        # Preprocess image
+        image_tensor = preprocess_image(image)
+        if image_tensor is None:
+            return None, None
         
         # Make prediction
         with torch.no_grad():
@@ -177,7 +171,8 @@ def predict_with_model(model, image_path: str) -> Tuple[str, Dict[str, float]]:
         
     except Exception as e:
         logger.error(f"Prediction error: {e}")
-        raise
+        st.error(f"Prediction failed: {str(e)}")
+        return None, None
 
 def create_streamlit_app():
     """Create the Streamlit web application."""
@@ -428,20 +423,23 @@ def create_streamlit_app():
         )
         
         if uploaded_file is not None:
-            # Display uploaded image
-            st.markdown('<div style="border: 1px solid #444; border-radius: 12px; padding: 1rem; background: rgba(255,255,255,0.02);">', unsafe_allow_html=True)
-            st.image(uploaded_file, caption="ACQUIRED IMAGE", use_column_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Create temporary file
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
-                tmp_file.write(uploaded_file.getvalue())
-                temp_path = tmp_file.name
-            
             try:
+                # Display uploaded image
+                st.markdown('<div style="border: 1px solid #444; border-radius: 12px; padding: 1rem; background: rgba(255,255,255,0.02);">', unsafe_allow_html=True)
+                image = Image.open(uploaded_file)
+                st.image(image, caption="ACQUIRED IMAGE", use_column_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                # Convert to array for processing
+                image_array = np.array(image)
+                
                 # Make prediction
                 with st.spinner("PROCESSING NEURAL NETWORK INFERENCE..."):
-                    predicted_class, probabilities = predict_with_model(st.session_state.model, temp_path)
+                    predicted_class, probabilities = predict_with_model(st.session_state.model, image_array)
+                
+                if predicted_class is None or probabilities is None:
+                    st.error("Failed to process image. Please try another image.")
+                    return
                 
                 # Display results in the second column
                 with col2:
@@ -515,13 +513,6 @@ def create_streamlit_app():
                 </div>
                 """, unsafe_allow_html=True)
                 logger.error(f"Streamlit app error: {e}")
-            
-            finally:
-                # Clean up temporary file
-                try:
-                    os.unlink(temp_path)
-                except:
-                    pass
 
 def main():
     """Main application entry point."""
