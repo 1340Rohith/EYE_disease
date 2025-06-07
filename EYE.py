@@ -16,6 +16,7 @@ from io import BytesIO
 import logging
 import numpy as np
 from PIL import Image
+from typing import Tuple, Dict
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
