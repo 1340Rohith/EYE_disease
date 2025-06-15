@@ -255,6 +255,86 @@ def create_streamlit_app():
         background: linear-gradient(90deg, #666, #999, #666);
     }
     
+    /* Instructions box styling */
+    .instructions-box {
+        background: linear-gradient(145deg, #1a2a3a, #0f1f2f);
+        padding: 2rem;
+        border-radius: 16px;
+        border: 1px solid #2a4a6a;
+        margin: 1.5rem 0;
+        box-shadow: 0 12px 40px rgba(0,100,150,0.2);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .instructions-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #4a9eff, #6bb6ff, #4a9eff);
+    }
+    
+    .instruction-item {
+        display: flex;
+        align-items: flex-start;
+        margin: 1.2rem 0;
+        padding: 1rem;
+        background: rgba(255,255,255,0.03);
+        border-radius: 10px;
+        border-left: 3px solid #4a9eff;
+        transition: all 0.3s ease;
+    }
+    
+    .instruction-item:hover {
+        background: rgba(255,255,255,0.05);
+        transform: translateX(5px);
+    }
+    
+    .instruction-number {
+        background: linear-gradient(135deg, #4a9eff, #6bb6ff);
+        color: #ffffff;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-right: 1rem;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+    }
+    
+    .instruction-content {
+        flex: 1;
+    }
+    
+    .instruction-title {
+        color: #ffffff;
+        font-size: 1.1rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .instruction-desc {
+        color: #b8d4f0;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin-bottom: 0.3rem;
+    }
+    
+    .instruction-tip {
+        color: #8fc5e8;
+        font-size: 0.85rem;
+        font-style: italic;
+        opacity: 0.9;
+    }
+    
     /* Probability bars */
     .prob-container {
         margin: 0.8rem 0;
@@ -420,6 +500,57 @@ def create_streamlit_app():
     
     with col1:
         st.markdown('<p class="section-header">IMAGE ACQUISITION</p>', unsafe_allow_html=True)
+        
+        # Professional capture instructions
+        st.markdown("""
+        <div class="instructions-box">
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <h3 style="color: #ffffff; font-weight: 400; letter-spacing: 1px; margin: 0;">
+                    📋 OPTIMAL CAPTURE PROTOCOL
+                </h3>
+                <p style="color: #b8d4f0; font-size: 0.95rem; margin: 0.5rem 0 0 0;">
+                    Follow these guidelines for accurate diagnostic analysis
+                </p>
+            </div>
+            
+            <div class="instruction-item">
+                <div class="instruction-number">1</div>
+                <div class="instruction-content">
+                    <div class="instruction-title">MAINTAIN PROPER DISTANCE</div>
+                    <div class="instruction-desc">Position camera at arm's length from subject</div>
+                    <div class="instruction-tip">~ 60-80 cm distance ensures optimal focus and field of view</div>
+                </div>
+            </div>
+            
+            <div class="instruction-item">
+                <div class="instruction-number">2</div>
+                <div class="instruction-content">
+                    <div class="instruction-title">PRECISE OCULAR CROPPING</div>
+                    <div class="instruction-desc">Frame the eye region tightly, excluding excess facial area</div>
+                    <div class="instruction-tip">Include eyelids, lashes, and surrounding tissue for context</div>
+                </div>
+            </div>
+            
+            <div class="instruction-item">
+                <div class="instruction-number">3</div>
+                <div class="instruction-content">
+                    <div class="instruction-title">ELIMINATE IRIS REFLECTIONS</div>
+                    <div class="instruction-desc">Avoid direct lighting that creates glare on the corneal surface</div>
+                    <div class="instruction-tip">Use diffused, indirect lighting or adjust angle to prevent artifacts</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(74, 158, 255, 0.1); border-radius: 8px; border-left: 3px solid #4a9eff;">
+                <div style="color: #ffffff; font-weight: 500; margin-bottom: 0.5rem;">⚡ QUICK CHECKLIST</div>
+                <div style="color: #b8d4f0; font-size: 0.9rem; line-height: 1.4;">
+                    ✓ Good lighting without shadows<br>
+                    ✓ Sharp focus on eye structures<br>
+                    ✓ No motion blur or camera shake<br>
+                    ✓ High resolution (minimum 800x600)
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
         uploaded_file = st.file_uploader(
             "Select ocular image for analysis",
