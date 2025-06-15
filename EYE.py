@@ -255,86 +255,6 @@ def create_streamlit_app():
         background: linear-gradient(90deg, #666, #999, #666);
     }
     
-    /* Instructions box styling */
-    .instructions-box {
-        background: linear-gradient(145deg, #1a2a3a, #0f1f2f);
-        padding: 2rem;
-        border-radius: 16px;
-        border: 1px solid #2a4a6a;
-        margin: 1.5rem 0;
-        box-shadow: 0 12px 40px rgba(0,100,150,0.2);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .instructions-box::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #4a9eff, #6bb6ff, #4a9eff);
-    }
-    
-    .instruction-item {
-        display: flex;
-        align-items: flex-start;
-        margin: 1.2rem 0;
-        padding: 1rem;
-        background: rgba(255,255,255,0.03);
-        border-radius: 10px;
-        border-left: 3px solid #4a9eff;
-        transition: all 0.3s ease;
-    }
-    
-    .instruction-item:hover {
-        background: rgba(255,255,255,0.05);
-        transform: translateX(5px);
-    }
-    
-    .instruction-number {
-        background: linear-gradient(135deg, #4a9eff, #6bb6ff);
-        color: #ffffff;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        font-size: 0.9rem;
-        margin-right: 1rem;
-        flex-shrink: 0;
-        box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
-    }
-    
-    .instruction-content {
-        flex: 1;
-    }
-    
-    .instruction-title {
-        color: #ffffff;
-        font-size: 1.1rem;
-        font-weight: 500;
-        margin-bottom: 0.5rem;
-        letter-spacing: 0.5px;
-    }
-    
-    .instruction-desc {
-        color: #b8d4f0;
-        font-size: 0.95rem;
-        line-height: 1.5;
-        margin-bottom: 0.3rem;
-    }
-    
-    .instruction-tip {
-        color: #8fc5e8;
-        font-size: 0.85rem;
-        font-style: italic;
-        opacity: 0.9;
-    }
-    
     /* Probability bars */
     .prob-container {
         margin: 0.8rem 0;
@@ -443,6 +363,55 @@ def create_streamlit_app():
     .confidence-high { --fill-color: #666; --fill-color-light: #888; }
     .confidence-medium { --fill-color: #555; --fill-color-light: #777; }
     .confidence-low { --fill-color: #444; --fill-color-light: #666; }
+    
+    /* Elegant instruction styling */
+    .instruction-header {
+        color: #ffffff;
+        font-size: 1.1rem;
+        font-weight: 400;
+        margin-bottom: 1rem;
+        letter-spacing: 0.8px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 0.5rem;
+    }
+    
+    .instruction-item {
+        display: flex;
+        align-items: flex-start;
+        margin: 1rem 0;
+        padding: 0.8rem;
+        background: rgba(255,255,255,0.03);
+        border-radius: 8px;
+        border-left: 2px solid #666;
+        transition: all 0.3s ease;
+    }
+    
+    .instruction-item:hover {
+        background: rgba(255,255,255,0.05);
+        border-left-color: #888;
+        transform: translateX(2px);
+    }
+    
+    .instruction-icon {
+        color: #ffffff;
+        font-size: 1.2rem;
+        margin-right: 0.8rem;
+        margin-top: 0.1rem;
+        min-width: 24px;
+    }
+    
+    .instruction-text {
+        color: #d0d0d0;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        letter-spacing: 0.3px;
+    }
+    
+    .instruction-emphasis {
+        color: #ffffff;
+        font-weight: 500;
+    }
     </style>
     """, unsafe_allow_html=True)
     
@@ -459,13 +428,54 @@ def create_streamlit_app():
     with st.sidebar:
         st.markdown('<p class="section-header">SYSTEM PARAMETERS</p>', unsafe_allow_html=True)
         
-        with st.expander("DIAGNOSTIC CAPABILITIES", expanded=True):
+        # Image Acquisition Instructions
+        with st.expander("📸 DIRECTIONS", expanded=True):
+            st.markdown("""
+            <div class="instruction-header">OPTIMAL CAPTURE PROTOCOL</div>
+            
+            <div class="instruction-item">
+                <div class="instruction-icon">!</div>
+                <div class="instruction-text">
+                    Position camera at <span class="instruction-emphasis">one arm's distance</span> from the subject for optimal focus and detail capture
+                </div>
+            </div>
+            
+            <div class="instruction-item">
+                <div class="instruction-icon">!</div>
+                <div class="instruction-text">
+                    Ensure <span class="instruction-emphasis">even, diffused lighting</span> to avoid harsh reflections on the corneal surface
+                </div>
+            </div>
+            
+            <div class="instruction-item">
+                <div class="instruction-icon">!</div>
+                <div class="instruction-text">
+                    <span class="instruction-emphasis">Crop tightly around the eye</span> - include only the ocular region, excluding surrounding facial features
+                </div>
+            </div>
+            
+            <div class="instruction-item">
+                <div class="instruction-icon">!</div>
+                <div class="instruction-text">
+                    Maintain <span class="instruction-emphasis">sharp focus</span> on the iris and pupil for accurate pathological assessment
+                </div>
+            </div>
+            
+            <div class="instruction-item">
+                <div class="instruction-icon">!</div>
+                <div class="instruction-text">
+                    Keep the eye <span class="instruction-emphasis">centrally aligned</span> in the frame with minimal head tilt or rotation
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with st.expander("🔬 DIAGNOSTIC CAPABILITIES", expanded=False):
             for disease, description in DISEASE_INFO.items():
                 st.markdown(f"**{disease.upper()}**")
                 st.markdown(f"<small>{description}</small>", unsafe_allow_html=True)
                 st.markdown("---")
         
-        with st.expander("CLINICAL DISCLAIMERS"):
+        with st.expander("⚕️ CLINICAL DISCLAIMERS"):
             st.markdown("""
             <div style="font-size: 0.9rem; line-height: 1.5;">
             • Research prototype - not FDA approved<br>
@@ -475,7 +485,7 @@ def create_streamlit_app():
             </div>
             """, unsafe_allow_html=True)
         
-        with st.expander("NETWORK ARCHITECTURE"):
+        with st.expander("🧠 NETWORK ARCHITECTURE"):
             st.markdown("""
             <div style="font-size: 0.85rem; font-family: monospace;">
             <strong>DEEP CNN SPECIFICATION:</strong><br>
@@ -500,57 +510,6 @@ def create_streamlit_app():
     
     with col1:
         st.markdown('<p class="section-header">IMAGE ACQUISITION</p>', unsafe_allow_html=True)
-        
-        # Professional capture instructions
-        st.markdown("""
-        <div class="instructions-box">
-            <div style="text-align: center; margin-bottom: 1.5rem;">
-                <h3 style="color: #ffffff; font-weight: 400; letter-spacing: 1px; margin: 0;">
-                    📋 OPTIMAL CAPTURE PROTOCOL
-                </h3>
-                <p style="color: #b8d4f0; font-size: 0.95rem; margin: 0.5rem 0 0 0;">
-                    Follow these guidelines for accurate diagnostic analysis
-                </p>
-            </div>
-            
-            <div class="instruction-item">
-                <div class="instruction-number">1</div>
-                <div class="instruction-content">
-                    <div class="instruction-title">MAINTAIN PROPER DISTANCE</div>
-                    <div class="instruction-desc">Position camera at arm's length from subject</div>
-                    <div class="instruction-tip">~ 60-80 cm distance ensures optimal focus and field of view</div>
-                </div>
-            </div>
-            
-            <div class="instruction-item">
-                <div class="instruction-number">2</div>
-                <div class="instruction-content">
-                    <div class="instruction-title">PRECISE OCULAR CROPPING</div>
-                    <div class="instruction-desc">Frame the eye region tightly, excluding excess facial area</div>
-                    <div class="instruction-tip">Include eyelids, lashes, and surrounding tissue for context</div>
-                </div>
-            </div>
-            
-            <div class="instruction-item">
-                <div class="instruction-number">3</div>
-                <div class="instruction-content">
-                    <div class="instruction-title">ELIMINATE IRIS REFLECTIONS</div>
-                    <div class="instruction-desc">Avoid direct lighting that creates glare on the corneal surface</div>
-                    <div class="instruction-tip">Use diffused, indirect lighting or adjust angle to prevent artifacts</div>
-                </div>
-            </div>
-            
-            <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(74, 158, 255, 0.1); border-radius: 8px; border-left: 3px solid #4a9eff;">
-                <div style="color: #ffffff; font-weight: 500; margin-bottom: 0.5rem;">⚡ QUICK CHECKLIST</div>
-                <div style="color: #b8d4f0; font-size: 0.9rem; line-height: 1.4;">
-                    ✓ Good lighting without shadows<br>
-                    ✓ Sharp focus on eye structures<br>
-                    ✓ No motion blur or camera shake<br>
-                    ✓ High resolution (minimum 800x600)
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
         
         uploaded_file = st.file_uploader(
             "Select ocular image for analysis",
