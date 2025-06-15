@@ -431,7 +431,6 @@ def create_streamlit_app():
         # Image Acquisition Instructions
         with st.expander("📸 DIRECTIONS", expanded=True):
             st.markdown("""
-            <div class="instruction-header">OPTIMAL CAPTURE PROTOCOL</div>
             
             <div class="instruction-item">
                 <div class="instruction-icon">!</div>
